@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enchanted Timetable</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e5e4e2; /* Shining platinum color */
+            color: #ffffff; /* Darker text color for better visibility */
+            perspective: 1000px;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #34495e;
+            border: 2px solid #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            animation: flipBox 2s ease-in-out;
+            position: relative;
+        }
+
+        h2 {
+            color: #ffcc00; /* Golden color */
+            text-shadow: 2px 2px 4px #666; /* Slight glow effect */
+            opacity: 1; /* Increased visibility */
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            border: 2px solid #ecf0f1;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+            transform: translateY(20px);
+            animation: fadeInTable 2s ease-in-out forwards;
+            position: relative;
+        }
+
+        th,
+        td {
+            border: 1px solid #ecf0f1;
+            padding: 8px;
+            text-align: left;
+            transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+
+        th {
+            background-color: #3498db;
+        }
+
+        tr {
+            opacity: 0;
+            animation: fadeInRow 1s ease-in-out forwards;
+        }
+
+        tr:nth-child(1) {
+            animation-delay: 0.5s;
+        }
+
+        tr:nth-child(2) {
+            animation-delay: 1s;
+        }
+
+        tr:nth-child(3) {
+            animation-delay: 1.5s;
+        }
+
+        tr:nth-child(4) {
+            animation-delay: 2s;
+        }
+
+        tr:nth-child(5) {
+            animation-delay: 2.5s;
+        }
+
+        .serial-no {
+            font-weight: bold;
+        }
+
+        .number-plate {
+            background-color: #3498db;
+            cursor: pointer;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100px; /* Initial width */
+            display: flex;
+            justify-content: space-evenly;
+            padding: 10px;
+            box-shadow: 0 -5px 10px rgba(255, 255, 255, 0.5);
+            resize: both;
+            overflow: hidden;
+            z-index: 999; /* Ensure the number plate appears above other elements */
+        }
+
+        .number {
+            padding: 8px;
+            font-weight: bold;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .number:hover {
+            background-color: #2980b9;
+        }
+
+        /* Glitter Effect */
+        .glitter {
+            position: absolute;
+            width: 10px; /* Increased size for better visibility */
+            height: 10px; /* Increased size for better visibility */
+            background: #ffffff;
+            opacity: 0.8; /* Increased brightness */
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); /* Enhanced glow effect */
+            animation: glitterEffect 1s infinite;
+        }
+
+        @keyframes glitterEffect {
+            0% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes flipBox {
+            0% {
+                transform: perspective(1000px) rotateY(90deg);
+            }
+
+            100% {
+                transform: perspective(1000px) rotateY(0deg);
+            }
+        }
+
+        @keyframes fadeInTable {
+            0% {
+                transform: translateY(20px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInRow {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Enchanted Timetable</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Serial No</th>
+                    <th>Subject Code</th>
+                    <th>Subject</th>
+                    <th>Duration</th>
+                    <th>Date</th>
+                    <th>Room</th>
+                </tr>
+            </thead>
+            <tbody id="timetableBody">
+                <tr>
+                    <td class="serial-no">0</td>
+                    <td>CE7301</td>
+                    <td>Design of RCC Structures-II</td>
+                    <td>08-12-23 AN</td>
+                    <td>112</td>
+                </tr>
+                <tr>
+                    <td class="serial-no">1</td>
+                    <td>CE7302</td>
+                    <td>Transportation Engineering-II</td>
+                    <td>05-12-23 AN</td>
+                    <td>112</td>
+                </tr>
+                <tr>
+                    <td class="serial-no">2</td>
+                    <td>CE7303</td>
+                    <td>Design of Steel Structures</td>
+                    <td>09-12-23 FN</td>
+                    <td>112</td>
+                </tr>
+                <tr>
+                    <td class="serial-no">3</td>
+                    <td>CE7304</td>
+                    <td>Construction, Planning and Management</td>
+                    <td>07-12-23 AN</td>
+                    <td>112</td>
+                </tr>
+                <tr>
+                    <td class="serial-no">4</td>
+                    <td>CE7308</td>
+                    <td>Advanced Hydraulic Structures</td>
+                    <td>15-12-23 AN</td>
+                    <td>111</td>
+                </tr>
+            </tbody>
+        </table>
+        <!-- Glitter Effect -->
+        <div class="glitter"></div>
+    </div>
+
+    <!-- Number Plate -->
+    <div class="number-plate" id="numberPlate" onmousedown="startResize(event)">
+        <div class="number" onmouseover="highlightRow(0)" onmouseout="resetHighlight(0)" ondblclick="resetHighlight(0)">0</div>
+        <div class="number" onmouseover="highlightRow(1)" onmouseout="resetHighlight(1)" ondblclick="resetHighlight(1)">1</div>
+        <div class="number" onmouseover="highlightRow(2)" onmouseout="resetHighlight(2)" ondblclick="resetHighlight(2)">2</div>
+        <div class="number" onmouseover="highlightRow(3)" onmouseout="resetHighlight(3)" ondblclick="resetHighlight(3)">3</div>
+        <div class="number" onmouseover="highlightRow(4)" onmouseout="resetHighlight(4)" ondblclick="resetHighlight(4)">4</div>
+    </div>
+
+    <script>
+        let resizing = false;
+        let initialX;
+        let initialWidth;
+
+        function startResize(event) {
+            resizing = true;
+            initialX = event.clientX;
+            initialWidth = parseFloat(document.getElementById('numberPlate').style.width);
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', () => {
+                resizing = false;
+                document.removeEventListener('mousemove', handleMouseMove);
+            });
+        }
+
+        function handleMouseMove(event) {
+            if (resizing) {
+                const newWidth = initialWidth + (event.clientX - initialX);
+                document.getElementById('numberPlate').style.width = `${Math.max(100, newWidth)}px`;
+            }
+        }
+
+        function highlightRow(serialNo) {
+            const row = document.querySelectorAll('#timetableBody tr')[serialNo];
+            row.style.backgroundColor = '#2980b9'; /* Highlight color */
+        }
+
+        function resetHighlight(serialNo) {
+            const row = document.querySelectorAll('#timetableBody tr')[serialNo];
+            row.style.backgroundColor = '';
+        }
+
+        // Glitter Effect
+        const container = document.querySelector('.container');
+        container.addEventListener('mouseover', createGlitter);
+
+        function createGlitter(event) {
+            const glitter = document.createElement('div');
+            glitter.className = 'glitter';
+            const x = event.clientX - container.offsetLeft;
+            const y = event.clientY - container.offsetTop;
+            glitter.style.left = `${x}px`;
+            glitter.style.top = `${y}px`;
+            container.appendChild(glitter);
+
+            setTimeout(() => {
+                glitter.remove();
+            }, 1000);
+            
+        }
+        
+        
+    </script>
+</body>
+
+</html>
