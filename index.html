@@ -76,19 +76,30 @@
         <a href="#">Services</a>
         <a href="https://www.nitp.ac.in/">Official website</a>
         <a href=" https://royal-glory.github.io/unofficialnitp2020/end%20sem%207.html">end sem 7</a>
-        Boring area
+        
 
 <!-- Dropdown menu -->
-<select id="Dropdown">
-    <!-- Dropdown menu -->
-<select id="Dropdown">
-    <option value="https://royal-glory.github.io/unofficialnitp2020/tiktaktoe.html">TikTakToe</option>
-    <option value="URL_for_chess">Chess</option>
-    <option value="URL_for_sudoku">Sudoku</option>
-</select>
 
-    
-</select>
+    <!-- Dropdown menu -->
+    <select id="Dropdown" onchange="redirectToURL()">
+      <option value="https://royal-glory.github.io/unofficialnitp2020/tiktaktoe.html">TikTakToe</option>
+      <option value="URL_for_chess">Chess</option>
+      <option value="URL_for_sudoku">Sudoku</option>
+  </select>
+  
+  <script>
+      function redirectToURL() {
+          var dropdown = document.getElementById("Dropdown");
+          var selectedValue = dropdown.options[dropdown.selectedIndex].value;
+          window.open(selectedValue, '_blank');
+      }
+  </script>
+  
+  
+  
+
+     
+  
  </nav>
 
     <main>
