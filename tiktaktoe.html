@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic-Tac-Toe</title>
+  <style>
+    
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(to bottom right, #3498db, #2c3e50);
+      color: #fff;
+    }
+
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 5px;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      cursor: pointer;
+      background: #66c5dd;
+      border: 2px solid #bdc3c7;
+      transition: background 0.3s;
+    }
+
+    .cell:hover {
+      background: #75e18b;
+    }
+
+    #status {
+      margin-top: 20px;
+    }
+
+    #new-game {
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      background: #2ecc71;
+      border: none;
+      color: #fff;
+      border-radius: 5px;
+    }
+
+    audio {
+      display: none;
+    }
+    
+  </style>
+</head>
+<body>
+
+  <div id="game-board"></div>
+  <div id="status"></div>
+  <button id="new-game" onclick="resetGame()">New Game</button>
+
+  <!-- Sound Effects -->
+  <audio id="click-sound" src="select.mp3"></audio>
+  <audio id="victory-sound" src="match end.mp3"></audio>
+
+  <script>
+    const board = document.getElementById('game-board');
+    const status = document.getElementById('status');
+    const newGameButton = document.getElementById('new-game');
+    const clickSound = document.getElementById('click-sound');
+    const victorySound = document.getElementById('victory-sound');
+
+    let currentPlayer = 'X';
+    let gameBoard = ['', '', '', '', '', '', '', '', ''];
+    let gameActive = true;
+
+    function renderBoard() {
+      board.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.setAttribute('data-index', i);
+        cell.textContent = gameBoard[i];
+        cell.addEventListener('click', handleCellClick);
+        board.appendChild(cell);
+      }
+    }
+
+    function playClickSound() {
+      clickSound.currentTime = 0;
+      clickSound.play();
+    }
+
+    function playVictorySound() {
+      victorySound.currentTime = 0;
+      victorySound.play();
+    }
+
+    function handleCellClick(event) {
+      playClickSound();
+      const index = event.target.getAttribute('data-index');
+      if (gameBoard[index] === '' && gameActive) {
+        gameBoard[index] = currentPlayer;
+        renderBoard();
+        if (checkWinner()) {
+          status.textContent = currentPlayer === 'X' ? 'You win!' : 'AI wins!';
+          gameActive = false;
+          playVictorySound();
+        } else if (gameBoard.every(cell => cell !== '')) {
+          status.textContent = 'It\'s a draw!';
+          gameActive = false;
+        } else {
+          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+          status.textContent = currentPlayer === 'X' ? 'Your turn' : 'AI\'s turn';
+          if (currentPlayer === 'O' && gameActive) {
+            makeAIMove();
+          }
+        }
+      }
+    }
+
+    function checkWinner() {
+      const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+
+      return winPatterns.some(pattern =>
+        gameBoard[pattern[0]] !== '' &&
+        gameBoard[pattern[0]] === gameBoard[pattern[1]] &&
+        gameBoard[pattern[1]] === gameBoard[pattern[2]]
+      );
+    }
+
+    function makeAIMove() {
+      // AI Strategy:
+      // 1. Check if AI can win in the next move
+      // 2. Check if the player can win in the next move and block it
+      // 3. If neither, make a random move
+
+      // Check if AI can win in the next move
+      const aiWinningMove = getWinningMove('O');
+      if (aiWinningMove !== -1) {
+        gameBoard[aiWinningMove] = 'O';
+      } else {
+        // Check if the player can win in the next move and block it
+        const playerWinningMove = getWinningMove('X');
+        if (playerWinningMove !== -1) {
+          gameBoard[playerWinningMove] = 'O';
+        } else {
+          // If neither, make a random move
+          const emptyCells = gameBoard.reduce((acc, cell, index) => {
+            if (cell === '') {
+              acc.push(index);
+            }
+            return acc;
+          }, []);
+
+          const randomIndex = Math.floor(Math.random() * emptyCells.length);
+          const aiMove = emptyCells[randomIndex];
+          gameBoard[aiMove] = 'O';
+        }
+      }
+
+      renderBoard();
+
+      if (checkWinner()) {
+        status.textContent = 'AI wins!';
+        gameActive = false;
+        playVictorySound();
+      } else if (gameBoard.every(cell => cell !== '')) {
+        status.textContent = 'It\'s a draw!';
+        gameActive = false;
+      } else {
+        currentPlayer = 'X';
+        status.textContent = 'Your turn';
+      }
+    }
+
+    function getWinningMove(player) {
+      // Check rows, columns, and diagonals for a winning move
+      for (let i = 0; i < 3; i++) {
+        // Check rows
+        if (gameBoard[i * 3] === player && gameBoard[i * 3 + 1] === player && gameBoard[i * 3 + 2] === '') {
+          return i * 3 + 2;
+        }
+        if (gameBoard[i * 3] === player && gameBoard[i * 3 + 2] === player && gameBoard[i * 3 + 1] === '') {
+          return i * 3 + 1;
+        }
+        if (gameBoard[i * 3 + 1] === player && gameBoard[i * 3 + 2] === player && gameBoard[i * 3] === '') {
+          return i * 3;
+        }
+
+        // Check columns
+        if (gameBoard[i] === player && gameBoard[i + 3] === player && gameBoard[i + 6] === '') {
+          return i + 6;
+        }
+        if (gameBoard[i] === player && gameBoard[i + 6] === player && gameBoard[i + 3] === '') {
+          return i + 3;
+        }
+        if (gameBoard[i + 3] === player && gameBoard[i + 6] === player && gameBoard[i] === '') {
+          return i;
+        }
+      }
+
+      // Check diagonals
+      if (gameBoard[0] === player && gameBoard[4] === player && gameBoard[8] === '') {
+        return 8;
+      }
+      if (gameBoard[0] === player && gameBoard[8] === player && gameBoard[4] === '') {
+        return 4;
+      }
+      if (gameBoard[4] === player && gameBoard[8] === player && gameBoard[0] === '') {
+        return 0;
+      }
+      if (gameBoard[2] === player && gameBoard[4] === player && gameBoard[6] === '') {
+        return 6;
+      }
+      if (gameBoard[2] === player && gameBoard[6] === player && gameBoard[4] === '') {
+        return 4;
+      }
+      if (gameBoard[4] === player && gameBoard[6] === player && gameBoard[2] === '') {
+        return 2;
+      }
+
+      return -1; // No winning move
+    }
+
+    function resetGame() {
+      currentPlayer = 'X';
+      gameBoard = ['', '', '', '', '', '', '', '', ''];
+      gameActive = true;
+      status.textContent = 'Your turn';
+      renderBoard();
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>
