@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interactive Erangel Map</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding-bottom: 140px; /* space for stopwatch bar */
+    }
+
+    #container {
+      position: relative;
+      display: inline-block;
+    }
+
+    #map {
+      max-width: 100%;
+      border: 2px solid #555;
+      border-radius: 10px;
+    }
+
+    #canvas, #drawCanvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+    }
+
+    .tools {
+      margin-top: 1rem;
+    }
+
+    button, select, input[type="color"], input[type="number"] {
+      padding: 0.5rem;
+      margin: 0.25rem;
+      font-size: 1rem;
+    }
+
+    #info {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    .stopwatches {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-top: 2px solid #ccc;
+      padding: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .stopwatchBox {
+      border: 1px solid #aaa;
+      padding: 0.5rem;
+      margin: 0.3rem;
+      border-radius: 5px;
+      background: #f0f0f0;
+    }
+
+    #markedTimes {
+      margin-top: 1rem;
+      text-align: left;
+      display: inline-block;
+    }
+
+    /* Style for the link button at the top */
+    .top-link {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .top-link:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Interactive Map</h1>
+
+  <!-- Button at the top linking to the interactive map -->
+  <a href="https://www.example.com" class="top-link" target="_blank">Visit Our Interactive Map</a>
+
+  <div class="tools">
+    <label for="mapSelector">Choose Map:</label>
+    <select id="mapSelector">
+      <option value="1">Erangel</option>
+      <option value="2">Vikendi</option>
+      <option value="3">Miramar</option>
+      <option value="4">Sanhok</option>
+    </select>
+  </div>
+
+  <div id="container">
+    <!-- The map image will be dynamically updated based on selection -->
+    <img id="map" src="https://raw.githubusercontent.com/yourusername/yourrepository/main/assets/erangel.png" alt="Map Image" />
+    <canvas id="canvas"></canvas>
+    <canvas id="drawCanvas"></canvas>
+  </div>
+
+  <div class="tools">
+    <button onclick="setTool('pen')">Pen</button>
+    <button onclick="setTool('line')">Line</button>
+    <button onclick="setTool('circle')">Circle</button>
+    <button onclick="setTool('rectangle')">Rectangle</button>
+    <button onclick="deleteSelectedShape()">Delete Selected</button>
+    <button onclick="clearCanvas()">Reset</button>
+    <br>
+    <label>Color: <input type="color" id="colorPicker" value="#ff0000"></label>
+    <label>Numerical (px): <input type="number" id="numericInput" placeholder="Value"></label>
+    <label>Scale (px/m): <input type="number" id="scaleInput" value="1" step="0.1"></label>
+    <button onclick="applyNumeric()">Apply</button>
+  </div>
+
+  <div id="info">Numerical Info: None</div>
+
+  <div id="markedTimes">
+    <h3>Marked Time History</h3>
+    <ul id="markedList"></ul>
+  </div>
+
+  <div class="stopwatches">
+    <button onclick="addStopwatch()">Add Stopwatch</button>
+    <div id="stopwatchContainer"></div>
+  </div>
+
+  <script>
+    const mapSelector = document.getElementById('mapSelector');
+    const mapImage = document.getElementById('map');
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    const colorPicker = document.getElementById('colorPicker');
+    const info = document.getElementById('info');
+    const numericInput = document.getElementById('numericInput');
+    const scaleInput = document.getElementById('scaleInput');
+    const markedList = document.getElementById('markedList');
+
+    let tool = 'pen';
+    let drawing = false;
+    let startX = 0;
+    let startY = 0;
+    let selectedShapeId = null;
+    const shapes = [];
+    let stopwatchCount = 0;
+
+    const mapImages = {
+      1: "https://raw.githubusercontent.com/yourusername/yourrepository/main/assets/erangel.png",
+      2: "https://raw.githubusercontent.com/yourusername/yourrepository/main/assets/vikendi.png",
+      3: "https://raw.githubusercontent.com/yourusername/yourrepository/main/assets/miramar.png",
+      4: "https://raw.githubusercontent.com/yourusername/yourrepository/main/assets/sanhok.png"
+    };
+
+    function resizeCanvas() {
+      const width = mapImage.clientWidth;
+      const height = mapImage.clientHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      redrawAll();
+    });
+
+    mapImage.onload = () => {
+      resizeCanvas();
+      redrawAll();
+    };
+
+    mapSelector.addEventListener('change', (e) => {
+      const selectedMap = e.target.value;
+      mapImage.src = mapImages[selectedMap];
+    });
+
+    function setTool(t) {
+      tool = t;
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      startY = e.clientY - rect.top;
+      drawing = true;
+      if (tool === 'pen') {
+        shapes.push({ id: Date.now(), type: 'pen', color: colorPicker.value, points: [{ x: startX, y: startY }] });
+      }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      if (tool === 'pen') {
+        const shape = shapes[shapes.length - 1];
+        shape.points.push({ x, y });
+        redrawAll();
+      }
+    });
+
+    canvas.addEventListener('mouseup', (e) => {
+      if (!drawing) return;
+      drawing = false;
+      const rect = canvas.getBoundingClientRect();
+      const endX = e.clientX - rect.left;
+      const endY = e.clientY - rect.top;
+      const scale = parseFloat(scaleInput.value) || 1;
+      const id = Date.now();
+
+      if (tool === 'line') {
+        const lengthPx = Math.hypot(endX - startX, endY - startY);
+        shapes.push({ id, type: 'line', color: colorPicker.value, startX, startY, endX, endY });
+        info.textContent = `Line: ${lengthPx.toFixed(2)} px = ${(lengthPx / scale).toFixed(2)} m`;
+      } else if (tool === 'circle') {
+        const r = Math.hypot(endX - startX, endY - startY);
+        shapes.push({ id, type: 'circle', color: colorPicker.value, x: startX, y: startY, r });
+        info.textContent = `Circle: ${r.toFixed(2)} px = ${(r / scale).toFixed(2)} m`;
+      } else if (tool === 'rectangle') {
+        const w = endX - startX;
+        const h = endY - startY;
+        shapes.push({ id, type: 'rectangle', color: colorPicker.value, x: startX, y: startY, width: w, height: h });
+        info.textContent = `Rectangle: ${Math.abs(w).toFixed(2)} px = ${(Math.abs(w) / scale).toFixed(2)} m, Height: ${Math.abs(h).toFixed(2)} px = ${(Math.abs(h) / scale).toFixed(2)} m`;
+      }
+      redrawAll();
+    });
+
+    function redrawAll() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const shape of shapes) {
+        ctx.strokeStyle = shape.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        if (shape.type === 'line') {
+          ctx.moveTo(shape.startX, shape.startY);
+          ctx.lineTo(shape.endX, shape.endY);
+        } else if (shape.type === 'circle') {
+          ctx.arc(shape.x, shape.y, shape.r, 0, 2 * Math.PI);
+        } else if (shape.type === 'rectangle') {
+          ctx.rect(shape.x, shape.y, shape.width, shape.height);
+        } else if (shape.type === 'pen') {
+          ctx.moveTo(shape.points[0].x, shape.points[0].y);
+          for (let i = 1; i < shape.points.length; i++) {
+            ctx.lineTo(shape.points[i].x, shape.points[i].y);
+          }
+        }
+        ctx.stroke();
+      }
+    }
+
+    function applyNumeric() {
+      const val = parseFloat(numericInput.value);
+      const scale = parseFloat(scaleInput.value) || 1;
+      if (isNaN(val) || val <= 0) {
+        alert("Enter valid number");
+        return;
+      }
+      const id = Date.now();
+      if (tool === 'line') {
+        shapes.push({ id, type: 'line', color: colorPicker.value, startX, startY, endX: startX + val, endY: startY });
+        info.textContent = `Line: ${val}px = ${(val / scale).toFixed(2)} m (Manual)`;
+      } else if (tool === 'circle') {
+        shapes.push({ id, type: 'circle', color: colorPicker.value, x: startX, y: startY, r: val });
+        info.textContent = `Circle radius: ${val}px = ${(val / scale).toFixed(2)} m (Manual)`;
+      } else if (tool === 'rectangle') {
+        shapes.push({ id, type: 'rectangle', color: colorPicker.value, x: startX, y: startY, width: val, height: val });
+        info.textContent = `Square: ${val}px = ${(val / scale).toFixed(2)} m (Manual)`;
+      }
+      redrawAll();
+    }
+
+    function deleteSelectedShape() {
+      shapes.pop();
+      redrawAll();
+      info.textContent = 'Numerical Info: Last shape deleted';
+    }
+
+    function clearCanvas() {
+      shapes.length = 0;
+      redrawAll();
+      info.textContent = 'Numerical Info: None';
+    }
+
+    function addStopwatch() {
+      if (stopwatchCount >= 5) {
+        alert("Maximum 5 stopwatches allowed");
+        return;
+      }
+      stopwatchCount++;
+      const stopwatchBox = document.createElement('div');
+      stopwatchBox.classList.add('stopwatchBox');
+      stopwatchBox.innerHTML = `<h4>Stopwatch ${stopwatchCount}</h4><button onclick="removeStopwatch(this)">Remove</button>`;
+      document.getElementById('stopwatchContainer').appendChild(stopwatchBox);
+    }
+
+    function removeStopwatch(button) {
+      button.parentElement.remove();
+      stopwatchCount--;
+    }
+  </script>
+</body>
+</html>
