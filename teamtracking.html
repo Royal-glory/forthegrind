@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bar Toggle Tracker</title>
+  <style>
+    body {
+      background-color: #f0f0f0;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .controls, .bottom-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .grid {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      overflow-x: auto;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .serial, .column-btn {
+      background-color: #333;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .bar {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .hidden {
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Total Bars Visible: <span id="counter">100</span></h2>
+  <h3>Stopwatch: <span id="stopwatch">00:00</span></h3>
+  <div class="controls">
+    <button onclick="startStopwatch()">Start</button>
+    <button onclick="stopStopwatch()">Stop</button>
+    <button onclick="resetStopwatch()">Reset</button>
+    <button onclick="markStatus()">Mark</button>
+    <button onclick="resetAllBars()">Reset All Bars</button>
+    <button onclick="downloadMarks()">Download Marks</button>
+  </div>
+  <ul id="marks"></ul>
+  <div class="grid" id="barGrid"></div>
+
+  <script>
+    const grid = document.getElementById('barGrid');
+    const counterDisplay = document.getElementById('counter');
+    const stopwatchDisplay = document.getElementById('stopwatch');
+    const marksList = document.getElementById('marks');
+    let totalBars = 100;
+    let interval = null;
+    let seconds = 0;
+    const allBars = [];
+    const markEntries = [];
+    const columnGroups = [];
+
+    const colors = [
+      '#8B0000','#004080','#006400','#8B008B','#A0522D',
+      '#2F4F4F','#00008B','#708090','#556B2F','#8B4513',
+      '#800000','#191970','#2E8B57','#0000CD','#6B8E23',
+      '#B22222','#3CB371','#483D8B','#808000','#DAA520',
+      '#4682B4','#7B68EE','#CD5C5C','#468499','#9932CC'
+    ];
+
+    function updateCounter(change) {
+      totalBars += change;
+      counterDisplay.textContent = totalBars;
+    }
+
+    function formatTime(sec) {
+      const minutes = Math.floor(sec / 60);
+      const seconds = sec % 60;
+      return ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')};
+    }
+
+    function updateStopwatch() {
+      seconds++;
+      stopwatchDisplay.textContent = formatTime(seconds);
+    }
+
+    function startStopwatch() {
+      if (!interval) interval = setInterval(updateStopwatch, 1000);
+    }
+
+    function stopStopwatch() {
+      clearInterval(interval);
+      interval = null;
+    }
+
+    function resetStopwatch() {
+      stopStopwatch();
+      seconds = 0;
+      stopwatchDisplay.textContent = "00:00";
+      marksList.innerHTML = "";
+      markEntries.length = 0;
+    }
+
+    function markStatus() {
+      const text = Time: ${formatTime(seconds)}, Bars Visible: ${totalBars};
+      const li = document.createElement('li');
+      li.textContent = text;
+      marksList.appendChild(li);
+      markEntries.push(text);
+    }
+
+    function downloadMarks() {
+      const blob = new Blob([markEntries.join('\\n')], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'marks.txt';
+      a.click();
+    }
+
+    function resetAllBars() {
+      allBars.forEach(bar => {
+        if (bar.classList.contains('hidden')) {
+          bar.classList.remove('hidden');
+          updateCounter(1);
+        }
+      });
+    }
+
+    for (let i = 0; i < 25; i++) {
+      const group = document.createElement('div');
+      group.className = 'group';
+
+      const serial = document.createElement('button');
+      serial.className = 'serial';
+      serial.textContent = i + 1;
+      serial.addEventListener('click', (e) => {
+        let changed = 0;
+        columnGroups[i].forEach(bar => {
+          const isHidden = bar.classList.contains('hidden');
+          if (e.shiftKey || e.ctrlKey || e.metaKey) {
+            bar.classList.toggle('hidden');
+            changed += isHidden ? 1 : -1;
+          } else if (!isHidden) {
+            bar.classList.add('hidden');
+            changed--;
+          }
+        });
+        updateCounter(changed);
+      });
+      group.appendChild(serial);
+
+      const column = [];
+      for (let j = 0; j < 4; j++) {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.backgroundColor = colors[i % colors.length];
+        bar.addEventListener('click', () => {
+          const isHidden = bar.classList.toggle('hidden');
+          updateCounter(isHidden ? -1 : 1);
+        });
+        allBars.push(bar);
+        column.push(bar);
+        group.appendChild(bar);
+      }
+
+      columnGroups.push(column);
+      grid.appendChild(group);
+    }
+
+    // Add bottom buttons
+    document.querySelectorAll('.group').forEach((group, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'column-btn';
+      btn.textContent = i + 1;
+      btn.addEventListener('click', () => {
+        let restored = 0;
+        columnGroups[i].forEach(bar => {
+          if (bar.classList.contains('hidden')) {
+            bar.classList.remove('hidden');
+            restored++;
+            updateCounter(1);
+          }
+        });
+        if (restored > 0) {
+          const msg = Time: ${formatTime(seconds)}, Column ${i + 1} restored ${restored} bars.;
+          const li = document.createElement('li');
+          li.textContent = msg;
+          marksList.appendChild(li);
+          markEntries.push(msg);
+        }
+      });
+      group.appendChild(btn);
+    });
+  </script>
+</body>
+</html>  
