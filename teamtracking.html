@@ -98,7 +98,7 @@
     function formatTime(sec) {
       const minutes = Math.floor(sec / 60);
       const seconds = sec % 60;
-      return ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')};
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
 
     function updateStopwatch() {
@@ -124,7 +124,7 @@
     }
 
     function markStatus() {
-      const text = Time: ${formatTime(seconds)}, Bars Visible: ${totalBars};
+      const text = `Time: ${formatTime(seconds)}, Bars Visible: ${totalBars}`;
       const li = document.createElement('li');
       li.textContent = text;
       marksList.appendChild(li);
@@ -132,7 +132,7 @@
     }
 
     function downloadMarks() {
-      const blob = new Blob([markEntries.join('\\n')], { type: 'text/plain' });
+      const blob = new Blob([markEntries.join('\n')], { type: 'text/plain' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'marks.txt';
@@ -204,7 +204,7 @@
           }
         });
         if (restored > 0) {
-          const msg = Time: ${formatTime(seconds)}, Column ${i + 1} restored ${restored} bars.;
+          const msg = `Time: ${formatTime(seconds)}, Column ${i + 1} restored ${restored} bars.`;
           const li = document.createElement('li');
           li.textContent = msg;
           marksList.appendChild(li);
@@ -215,4 +215,4 @@
     });
   </script>
 </body>
-</html>  
+</html>
