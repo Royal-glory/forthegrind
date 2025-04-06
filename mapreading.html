@@ -28,7 +28,8 @@
       position: absolute;
       left: 0;
       top: 0;
-      pointer-events: none;
+      /* Changed pointer-events to auto */
+      pointer-events: auto;
     }
 
     .tools {
@@ -276,84 +277,63 @@
     function applyNumeric() {
       const val = parseFloat(numericInput.value);
       const scale = parseFloat(scaleInput.value) || 1;
-      if (isNaN(val) || val <= 0) {
-        alert("Enter valid number");
-        return;
+      if (val) {
+        info.textContent = `Numerical Info: ${val} px = ${(val / scale).toFixed(2)} m`;
+      } else {
+        info.textContent = "Numerical Info: None";
       }
-      const id = Date.now();
-      if (tool === 'line') {
-        shapes.push({ id, type: 'line', color: colorPicker.value, startX, startY, endX: startX + val, endY: startY });
-        info.textContent = `Line: ${val}px = ${(val / scale).toFixed(2)} m (Manual)`;
-      } else if (tool === 'circle') {
-        shapes.push({ id, type: 'circle', color: colorPicker.value, x: startX, y: startY, r: val });
-        info.textContent = `Circle radius: ${val}px = ${(val / scale).toFixed(2)} m (Manual)`;
-      } else if (tool === 'rectangle') {
-        shapes.push({ id, type: 'rectangle', color: colorPicker.value, x: startX, y: startY, width: val, height: val });
-        info.textContent = `Square: ${val}px = ${(val / scale).toFixed(2)} m (Manual)`;
-      }
-      redrawAll();
     }
 
     function deleteSelectedShape() {
-      shapes.pop();
-      redrawAll();
-      info.textContent = 'Numerical Info: Last shape deleted';
+      if (selectedShapeId !== null) {
+        const index = shapes.findIndex(shape => shape.id === selectedShapeId);
+        if (index !== -1) {
+          shapes.splice(index, 1);
+          selectedShapeId = null;
+          redrawAll();
+        }
+      }
     }
 
     function clearCanvas() {
       shapes.length = 0;
       redrawAll();
-      info.textContent = 'Numerical Info: None';
     }
 
+    // Stopwatch functionality
     function addStopwatch() {
-      if (stopwatchCount >= 5) {
-        alert("Maximum of 5 stopwatches allowed.");
-        return;
-      }
-      stopwatchCount++;
-      const container = document.getElementById('stopwatchContainer');
+      const stopwatchId = `stopwatch-${stopwatchCount++}`;
       const stopwatchDiv = document.createElement('div');
       stopwatchDiv.className = 'stopwatchBox';
+      stopwatchDiv.id = stopwatchId;
+      stopwatchDiv.innerHTML = `
+        <button onclick="startStopwatch('${stopwatchId}')">Start</button>
+        <button onclick="stopStopwatch('${stopwatchId}')">Stop</button>
+        <button onclick="resetStopwatch('${stopwatchId}')">Reset</button>
+        <p>Time: <span id="time-${stopwatchId}">0</span> seconds</p>
+      `;
+      document.getElementById('stopwatchContainer').appendChild(stopwatchDiv);
+    }
 
-      let time = 0;
-      let running = false;
-      let interval;
+    function startStopwatch(id) {
+      const timeSpan = document.getElementById(`time-${id}`);
+      let seconds = 0;
+      const intervalId = setInterval(() => {
+        seconds++;
+        timeSpan.textContent = seconds;
+      }, 1000);
+      document.getElementById(id).dataset.intervalId = intervalId;
+    }
 
-      const label = document.createElement('span');
-      label.textContent = `Stopwatch ${stopwatchCount}: `;
-      stopwatchDiv.appendChild(label);
+    function stopStopwatch(id) {
+      const intervalId = document.getElementById(id).dataset.intervalId;
+      clearInterval(intervalId);
+    }
 
-      const timeDisplay = document.createElement('span');
-      timeDisplay.textContent = '0.0s';
-      stopwatchDiv.appendChild(timeDisplay);
-
-      const startStopButton = document.createElement('button');
-      startStopButton.textContent = 'Start';
-      startStopButton.onclick = () => {
-        if (running) {
-          clearInterval(interval);
-          startStopButton.textContent = 'Start';
-        } else {
-          interval = setInterval(() => {
-            time += 0.1;
-            timeDisplay.textContent = `${time.toFixed(1)}s`;
-          }, 100);
-          startStopButton.textContent = 'Stop';
-        }
-        running = !running;
-      };
-      stopwatchDiv.appendChild(startStopButton);
-
-      const resetButton = document.createElement('button');
-      resetButton.textContent = 'Reset';
-      resetButton.onclick = () => {
-        time = 0;
-        timeDisplay.textContent = '0.0s';
-      };
-      stopwatchDiv.appendChild(resetButton);
-
-      container.appendChild(stopwatchDiv);
+    function resetStopwatch(id) {
+      const timeSpan = document.getElementById(`time-${id}`);
+      timeSpan.textContent = '0';
+      stopStopwatch(id);
     }
   </script>
 </body>
