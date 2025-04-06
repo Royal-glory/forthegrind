@@ -102,18 +102,17 @@
   <a href="https://www.example.com" class="top-link" target="_blank">Visit Our Interactive Map</a>
 
   <div class="tools">
-    <label for="mapSelector">Choose Map:</label>
-    <select id="mapSelector">
-      <option value="1">Erangel</option>
-      <option value="2">Vikendi</option>
-      <option value="3">Miramar</option>
-      <option value="4">Sanhok</option>
+    <label for="mapSelect">Select Map: </label>
+    <select id="mapSelect">
+      <option value="erangel">Erangel</option>
+      <option value="vikendi">Vikendi</option>
+      <option value="miramar">Miramar</option>
+      <option value="sanhok">Sanhok</option>
     </select>
   </div>
 
   <div id="container">
-    <!-- The map image will be dynamically updated based on selection -->
-    <img id="map" src="https://raw.githubusercontent.com/yourusername/yourrepository/main/assets/erangel.png" alt="Map Image" />
+    <img id="map" src="https://raw.githubusercontent.com/Royal-glory/unofficialnitp2020/main/erangel.png" alt="Map Image" />
     <canvas id="canvas"></canvas>
     <canvas id="drawCanvas"></canvas>
   </div>
@@ -145,15 +144,15 @@
   </div>
 
   <script>
-    const mapSelector = document.getElementById('mapSelector');
-    const mapImage = document.getElementById('map');
     const canvas = document.getElementById('drawCanvas');
+    const map = document.getElementById('map');
     const ctx = canvas.getContext('2d');
     const colorPicker = document.getElementById('colorPicker');
     const info = document.getElementById('info');
     const numericInput = document.getElementById('numericInput');
     const scaleInput = document.getElementById('scaleInput');
     const markedList = document.getElementById('markedList');
+    const mapSelect = document.getElementById('mapSelect');
 
     let tool = 'pen';
     let drawing = false;
@@ -163,16 +162,9 @@
     const shapes = [];
     let stopwatchCount = 0;
 
-    const mapImages = {
-      1: "https://raw.githubusercontent.com/yourusername/yourrepository/main/assets/erangel.png",
-      2: "https://raw.githubusercontent.com/yourusername/yourrepository/main/assets/vikendi.png",
-      3: "https://raw.githubusercontent.com/yourusername/yourrepository/main/assets/miramar.png",
-      4: "https://raw.githubusercontent.com/yourusername/yourrepository/main/assets/sanhok.png"
-    };
-
     function resizeCanvas() {
-      const width = mapImage.clientWidth;
-      const height = mapImage.clientHeight;
+      const width = map.clientWidth;
+      const height = map.clientHeight;
       canvas.width = width;
       canvas.height = height;
     }
@@ -182,14 +174,28 @@
       redrawAll();
     });
 
-    mapImage.onload = () => {
+    map.onload = () => {
       resizeCanvas();
       redrawAll();
     };
 
-    mapSelector.addEventListener('change', (e) => {
+    // Update the map image when a new map is selected
+    mapSelect.addEventListener('change', (e) => {
       const selectedMap = e.target.value;
-      mapImage.src = mapImages[selectedMap];
+      switch (selectedMap) {
+        case 'erangel':
+          map.src = "https://raw.githubusercontent.com/Royal-glory/unofficialnitp2020/main/erangel.png";
+          break;
+        case 'vikendi':
+          map.src = "https://raw.githubusercontent.com/Royal-glory/unofficialnitp2020/main/vikendi.png";
+          break;
+        case 'miramar':
+          map.src = "https://raw.githubusercontent.com/Royal-glory/unofficialnitp2020/main/miramar.png";
+          break;
+        case 'sanhok':
+          map.src = "https://raw.githubusercontent.com/Royal-glory/unofficialnitp2020/main/sanhok.png";
+          break;
+      }
     });
 
     function setTool(t) {
@@ -302,19 +308,52 @@
 
     function addStopwatch() {
       if (stopwatchCount >= 5) {
-        alert("Maximum 5 stopwatches allowed");
+        alert("Maximum of 5 stopwatches allowed.");
         return;
       }
       stopwatchCount++;
-      const stopwatchBox = document.createElement('div');
-      stopwatchBox.classList.add('stopwatchBox');
-      stopwatchBox.innerHTML = `<h4>Stopwatch ${stopwatchCount}</h4><button onclick="removeStopwatch(this)">Remove</button>`;
-      document.getElementById('stopwatchContainer').appendChild(stopwatchBox);
-    }
+      const container = document.getElementById('stopwatchContainer');
+      const stopwatchDiv = document.createElement('div');
+      stopwatchDiv.className = 'stopwatchBox';
 
-    function removeStopwatch(button) {
-      button.parentElement.remove();
-      stopwatchCount--;
+      let time = 0;
+      let running = false;
+      let interval;
+
+      const label = document.createElement('span');
+      label.textContent = `Stopwatch ${stopwatchCount}: `;
+      stopwatchDiv.appendChild(label);
+
+      const timeDisplay = document.createElement('span');
+      timeDisplay.textContent = '0.0s';
+      stopwatchDiv.appendChild(timeDisplay);
+
+      const startStopButton = document.createElement('button');
+      startStopButton.textContent = 'Start';
+      startStopButton.onclick = () => {
+        if (running) {
+          clearInterval(interval);
+          startStopButton.textContent = 'Start';
+        } else {
+          interval = setInterval(() => {
+            time += 0.1;
+            timeDisplay.textContent = `${time.toFixed(1)}s`;
+          }, 100);
+          startStopButton.textContent = 'Stop';
+        }
+        running = !running;
+      };
+      stopwatchDiv.appendChild(startStopButton);
+
+      const resetButton = document.createElement('button');
+      resetButton.textContent = 'Reset';
+      resetButton.onclick = () => {
+        time = 0;
+        timeDisplay.textContent = '0.0s';
+      };
+      stopwatchDiv.appendChild(resetButton);
+
+      container.appendChild(stopwatchDiv);
     }
   </script>
 </body>
